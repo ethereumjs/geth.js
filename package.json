@@ -1,0 +1,38 @@
+{
+  "name": "geth",
+  "version": "0.1.0",
+  "description": "Get your geth on",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "lint": "jshint *.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tinybike/geth.js.git"
+  },
+  "keywords": [
+    "geth",
+    "ethereum",
+    "spawn",
+    "child process"
+  ],
+  "author": "Jack Peterson <jack@tinybike.net>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tinybike/geth.js/issues"
+  },
+  "homepage": "https://github.com/tinybike/geth.js#readme",
+  "devDependencies": {
+    "augur-contracts": "^0.1.7",
+    "browserify": "^12.0.1",
+    "chai": "^3.4.0",
+    "coveralls": "^2.11.4",
+    "del": "^2.0.2",
+    "ethrpc": "^0.3.8",
+    "gulp": "^3.9.0",
+    "istanbul": "^0.4.0",
+    "mocha": "^2.3.3",
+    "uglify-js": "^2.5.0"
+  }
+}
