@@ -1,5 +1,5 @@
 /**
- * Spawn a geth of your very own!
+ * Get your geth on from Node.js.
  * @author Jack Peterson (jack@tinybike.net)
  */
 
@@ -26,27 +26,36 @@ var geth = {
 
     options: null,
 
+    datadir: null,
+
+    network: null,
+
     bin: null,
 
     Error: GethError,
 
-    configure: function (options, account) {
-        this.options = options;
+    configure: function (options) {
         this.bin = options.geth_bin || "geth";
-        var f = options.flags;
-        f.datadir = f.datadir || join(process.env.HOME, ".ethereum-" + options.flags.networkid);
+        var f = options.flags || options;
+        this.network = f.networkid;
+        f.datadir = f.datadir || join(process.env.HOME, ".ethereum-" + f.networkid);
         if (options.symlink) {
             if (fs.existsSync(options.symlink)) fs.unlinkSync(options.symlink);
             fs.symlinkSync(f.datadir, options.symlink);
             f.datadir = options.symlink;
         }
+        this.datadir = f.datadir;
         this.flags = [];
-        if (account) {
+        var unlock = false;
+        var password = false;
+        if (options.account) {
             this.flags = this.flags.concat([
-                "--etherbase", account,
-                "--unlock", account,
-                "--password", join(f.datadir, ".password")
+                "--etherbase", options.account,
+                "--unlock", options.account,
+                "--password", join(this.datadir, ".password")
             ]);
+            unlock = true;
+            password = true;
         }
         if (f && f.constructor === Object) {
             for (var flag in f) {
@@ -54,23 +63,39 @@ var geth = {
                 this.flags.push("--" + flag);
                 if (f[flag]) {
                     if (f[flag].constructor === Array) {
-                        this.flags = this.flags.concat(f[flag]);
+                        this.flags.push(f[flag].join(' '));
                     } else {
                         this.flags.push(f[flag]);
                     }
                 }
+                if (flag === "unlock") unlock = true;
+                if (flag === "password") password = true;
             }
+        }
+        if (unlock && !password) {
+            this.flags = this.flags.concat([
+                "--password", join(this.datadir, ".password")
+            ]);
         }
         return this.flags;
     },
 
-    stop: function (geth) {
-        geth = geth || this.geth;
-        if (geth) {
-            if (this.debug) console.log("Shut down geth...");
-            geth.kill();
-            geth = null;
+    stop: function (callback) {
+        callback = callback || function () { };
+        var monitor, count = 0;
+        if (this.geth) {
+            this.geth.kill();
+            this.geth = null;
         }
+        (function pulse() {
+            cp.exec("ps cax | grep geth > /dev/null", function (err) {
+                if (err === null || count > 100) {
+                    if (monitor) clearTimeout(monitor);
+                    return callback();
+                }
+                monitor = setTimeout(pulse, 1000);
+            });
+        })();
     },
 
     start: function (flags, callback) {
@@ -82,18 +107,10 @@ var geth = {
             }
             if (this.debug) {
                 console.log(
-                    "Spawn " + this.bin + " on network "+
-                    this.options.flags.networkid + "..."
+                    "Spawn " + this.bin + " on network " + this.network + "..."
                 );
             }
             this.geth = cp.spawn(this.bin, flags);
-            if (this.debug) {
-                console.log(
-                    this.bin, "listening on ports:"+
-                    "\n - Peer:", this.options.flags.port || 30303,
-                    "\n - RPC: ", this.options.flags.rpcport || 8545
-                );
-            }
             this.geth.stdout.on("data", function (data) {
                 if (self.debug) process.stdout.write(data);
             });

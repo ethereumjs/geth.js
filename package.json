@@ -1,11 +1,11 @@
 {
   "name": "geth",
   "version": "0.1.0",
-  "description": "Get your geth on",
+  "description": "Get your geth on from Node.js",
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "lint": "jshint *.js"
+    "lint": "jshint index.js"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/tinybike/geth.js#readme",
   "devDependencies": {
-    "augur-contracts": "^0.1.7",
+    "async": "^1.5.0",
     "browserify": "^12.0.1",
     "chai": "^3.4.0",
     "coveralls": "^2.11.4",
