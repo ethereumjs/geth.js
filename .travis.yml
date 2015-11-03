@@ -14,6 +14,9 @@ before_install:
   - sudo add-apt-repository -y ppa:ethereum/ethereum-dev
   - sudo apt-get update -qq
   - sudo apt-get install geth -y -qq
+  - yes | geth --datadir ~/.ethereum-10101 &
+  - sleep 5
+  - killall geth
 
 install:
   - npm install
@@ -21,4 +24,4 @@ install:
 
 script:
   - npm run lint
-  - yes | istanbul cover -x **/lib/** ./node_modules/mocha/bin/_mocha test/*.js --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
+  - istanbul cover -x **/lib/** ./node_modules/mocha/bin/_mocha test/*.js --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
