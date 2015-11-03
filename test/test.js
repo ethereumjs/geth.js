@@ -9,7 +9,7 @@ var async = require("async");
 var join = require("path").join;
 var assert = require("chai").assert;
 var ethrpc = require("ethrpc");
-var geth = require("./");
+var geth = require("../");
 
 var COINBASE = {
     "10101": "0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b",
@@ -54,14 +54,26 @@ var options = {
             mine: null
         }
     },
-    "network 10101: flags (unnested)": {
+    "network 10101: locked": {
+        networkid: "10101",
+        port: 30304,
+        rpcport: 8547
+    },
+    "network 10101: locked/flags": {
+        flags: {
+            networkid: "10101",
+            port: 30304,
+            rpcport: 8547
+        }
+    },
+    "network 10101: unlocked": {
         networkid: "10101",
         port: 30304,
         rpcport: 8547,
         unlock: COINBASE["10101"],
         etherbase: COINBASE["10101"]
     },
-    "network 10101: flags (nested)": {
+    "network 10101: unlocked/flags": {
         flags: {
             networkid: "10101",
             port: 30304,
@@ -80,7 +92,7 @@ var options = {
             bootnodes: BOOTNODES
         }
     },
-    "network 7: flags (unnested)": {
+    "network 7: unlocked": {
         networkid: "7",
         port: 30304,
         rpcport: 8547,
@@ -88,7 +100,7 @@ var options = {
         etherbase: COINBASE["7"],
         bootnodes: BOOTNODES
     },
-    "network 7: flags (nested)": {
+    "network 7: unlocked/flags": {
         flags: {
             networkid: "7",
             port: 30304,
@@ -113,7 +125,9 @@ function runtests(options) {
 
     before(function (done) {
         this.timeout(TIMEOUT);
-        geth.start(geth.configure(options), function (spawned) {
+        geth.configure(options);
+        geth.start(function (err, spawned) {
+            if (err) return done(err);
             if (!spawned) return done(new geth.Error("where's the geth?"));
             ethrpc.ipcpath = join(geth.datadir, "geth.ipc");
             done();
@@ -121,6 +135,7 @@ function runtests(options) {
     });
 
     after(function (done) {
+        this.timeout(TIMEOUT);
         geth.stop(done);
     });
 

@@ -1,7 +1,7 @@
 {
   "name": "geth",
-  "version": "0.1.0",
-  "description": "Get your geth on from Node.js",
+  "version": "0.1.1",
+  "description": "Start and stop geth from Node.js",
   "main": "index.js",
   "scripts": {
     "test": "mocha",

@@ -1,5 +1,5 @@
 /**
- * Get your geth on from Node.js.
+ * Start and stop geth from Node.js.
  * @author Jack Peterson (jack@tinybike.net)
  */
 
@@ -20,7 +20,7 @@ var geth = {
 
     debug: false,
 
-    geth: null,
+    proc: null,
 
     flags: null,
 
@@ -31,6 +31,8 @@ var geth = {
     network: null,
 
     bin: null,
+
+    configured: false,
 
     Error: GethError,
 
@@ -77,67 +79,53 @@ var geth = {
                 "--password", join(this.datadir, ".password")
             ]);
         }
+        this.configured = true;
         return this.flags;
-    },
-
-    stop: function (callback) {
-        callback = callback || function () { };
-        var monitor, count = 0;
-        if (this.geth) {
-            this.geth.kill();
-            this.geth = null;
-        }
-        (function pulse() {
-            cp.exec("ps cax | grep geth > /dev/null", function (err) {
-                if (err === null || count > 100) {
-                    if (monitor) clearTimeout(monitor);
-                    return callback();
-                }
-                monitor = setTimeout(pulse, 1000);
-            });
-        })();
     },
 
     start: function (flags, callback) {
         var self = this;
-        if (this.bin) {
+        if (this.configured) {
             if (flags && flags.constructor === Function) {
                 callback = flags;
                 flags = this.flags;
             }
+            callback = callback || function () { };
             if (this.debug) {
                 console.log(
                     "Spawn " + this.bin + " on network " + this.network + "..."
                 );
             }
-            this.geth = cp.spawn(this.bin, flags);
-            this.geth.stdout.on("data", function (data) {
+            this.proc = cp.spawn(this.bin, flags);
+            this.proc.stdout.on("data", function (data) {
                 if (self.debug) process.stdout.write(data);
             });
-            this.geth.stderr.on("data", function (data) {
-                var index = data.toString().indexOf("Tx");
-                if (self.debug && index > -1) {
-                    data = "[geth] " + data.toString().slice(index);
-                    process.stdout.write(data);
-                }
+            this.proc.stderr.on("data", function (data) {
+                if (self.debug) process.stdout.write(data);
                 if (data.toString().indexOf("IPC service started") > -1) {
-                    if (callback && callback.constructor === Function) {
-                        callback(self.geth);
-                    }
+                    callback(null, self.proc);
                 }
             });
-            this.geth.on("close", function (code) {
+            this.proc.on("close", function (code) {
                 if (code !== 2 && code !== 0) {
-                    if (self.geth !== null) self.stop();
-                    throw new self.Error("geth closed with code " + code);
+                    if (self.proc !== null) self.stop();
+                    callback(new self.Error("geth closed with code " + code));
                 }
             });
-            return this.geth;
+            return this.proc;
         }
+        return this.start(this.configure(flags), callback);
+    },
+
+
+    stop: function (callback) {
+        callback = callback || function () { };
+        if (this.proc) this.proc.kill();
+        callback();
     }
 
 };
 
-process.on("exit", function () { if (geth.geth) geth.stop(); });
+process.on("exit", function () { if (geth.proc) geth.stop(); });
 
 module.exports = geth;
