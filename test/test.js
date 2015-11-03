@@ -55,23 +55,23 @@ var options = {
             port: 30304,
             rpcport: 8547
         }
-    },
-    "network 7: unlocked": {
+    }
+};
+if (!process.env.CONTINUOUS_INTEGRATION) {
+    options["network 7: unlocked"] = {
         networkid: "7",
         port: 30304,
         rpcport: 8547,
         bootnodes: BOOTNODES
-    },
-    "network 7: unlocked/flags": {
+    };
+    options["network 7: unlocked/flags"] = {
         flags: {
             networkid: "7",
             port: 30304,
             rpcport: 8547,
             bootnodes: BOOTNODES
         }
-    }
-};
-if (!process.env.CONTINUOUS_INTEGRATION) {
+    };
     options["network 10101: unlocked"] = {
         networkid: "10101",
         port: 30304,
