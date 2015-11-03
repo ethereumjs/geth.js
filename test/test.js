@@ -352,15 +352,15 @@ function runtests(options) {
             });
         });
 
-        it("blockNumber", function (done) {
-            ethrpc.blockNumber(function (res) {
-                if (res.error) return done(res);
-                assert.isAbove(parseInt(res), 0);
-                done();
-            });
-        });
-
         if (!process.env.CONTINUOUS_INTEGRATION) {
+
+            it("blockNumber", function (done) {
+                ethrpc.blockNumber(function (res) {
+                    if (res.error) return done(res);
+                    assert.isAbove(parseInt(res), 0);
+                    done();
+                });
+            });
 
             it("balance/getBalance", function (done) {
                 ethrpc.balance(coinbase, function (res) {

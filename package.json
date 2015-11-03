@@ -1,6 +1,6 @@
 {
   "name": "geth",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Start and stop geth from Node.js",
   "main": "index.js",
   "scripts": {
@@ -25,14 +25,10 @@
   "homepage": "https://github.com/tinybike/geth.js#readme",
   "devDependencies": {
     "async": "^1.5.0",
-    "browserify": "^12.0.1",
     "chai": "^3.4.0",
     "coveralls": "^2.11.4",
-    "del": "^2.0.2",
     "ethrpc": "^0.3.8",
-    "gulp": "^3.9.0",
     "istanbul": "^0.4.0",
-    "mocha": "^2.3.3",
-    "uglify-js": "^2.5.0"
+    "mocha": "^2.3.3"
   }
 }
