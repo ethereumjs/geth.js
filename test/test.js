@@ -43,17 +43,6 @@ var BOOTNODES = [
 ];
 
 var options = {
-    "network 10101: account/symlink/flags": {
-        account: COINBASE["10101"],
-        symlink: join(process.env.HOME, "ethlink"),
-        flags: {
-            networkid: "10101",
-            port: 30304,
-            rpcport: 8547,
-            shh: null,
-            mine: null
-        }
-    },
     "network 10101: locked": {
         networkid: "10101",
         port: 30304,
@@ -66,14 +55,30 @@ var options = {
             rpcport: 8547
         }
     },
-    "network 10101: unlocked": {
+    "network 7: unlocked": {
+        networkid: "7",
+        port: 30304,
+        rpcport: 8547,
+        bootnodes: BOOTNODES
+    },
+    "network 7: unlocked/flags": {
+        flags: {
+            networkid: "7",
+            port: 30304,
+            rpcport: 8547,
+            bootnodes: BOOTNODES
+        }
+    }
+};
+if (!process.env.CONTINUOUS_INTEGRATION) {
+    options["network 10101: unlocked"] = {
         networkid: "10101",
         port: 30304,
         rpcport: 8547,
         unlock: COINBASE["10101"],
         etherbase: COINBASE["10101"]
-    },
-    "network 10101: unlocked/flags": {
+    };
+    options["network 10101: unlocked/flags"] = {
         flags: {
             networkid: "10101",
             port: 30304,
@@ -81,26 +86,27 @@ var options = {
             unlock: COINBASE["10101"],
             etherbase: COINBASE["10101"]
         }
-    },
-    "network 7: account/symlink/flags": {
-        account: COINBASE["7"],
+    };
+    options["network 10101: account/symlink/flags"] = {
+        account: COINBASE["10101"],
         symlink: join(process.env.HOME, "ethlink"),
         flags: {
-            networkid: "7",
+            networkid: "10101",
             port: 30304,
             rpcport: 8547,
-            bootnodes: BOOTNODES
+            shh: null,
+            mine: null
         }
-    },
-    "network 7: unlocked": {
+    };
+    options["network 7: unlocked"] = {
         networkid: "7",
         port: 30304,
         rpcport: 8547,
         unlock: COINBASE["7"],
         etherbase: COINBASE["7"],
         bootnodes: BOOTNODES
-    },
-    "network 7: unlocked/flags": {
+    };
+    options["network 7: unlocked/flags"] = {
         flags: {
             networkid: "7",
             port: 30304,
@@ -109,8 +115,18 @@ var options = {
             etherbase: COINBASE["7"],
             bootnodes: BOOTNODES
         }
-    }
-};
+    };
+    options["network 7: account/symlink/flags"] = {
+        account: COINBASE["7"],
+        symlink: join(process.env.HOME, "ethlink"),
+        flags: {
+            networkid: "7",
+            port: 30304,
+            rpcport: 8547,
+            bootnodes: BOOTNODES
+        }
+    };
+}
 
 var TIMEOUT = 360000;
 var SHA3_INPUT = "boom!";
@@ -152,15 +168,17 @@ function runtests(options) {
             });
         };
 
-        test({
-            command: {
-                id: ++requests,
-                jsonrpc: "2.0",
-                method: "eth_coinbase",
-                params: []
-            },
-            expected: coinbase
-        });
+        if (!process.env.CONTINUOUS_INTEGRATION) {
+            test({
+                command: {
+                    id: ++requests,
+                    jsonrpc: "2.0",
+                    method: "eth_coinbase",
+                    params: []
+                },
+                expected: coinbase
+            });
+        }
         test({
             command: {
                 id: ++requests,
@@ -224,43 +242,51 @@ function runtests(options) {
 
     });
 
-    describe("unlocked", function () {
+    if (!process.env.CONTINUOUS_INTEGRATION) {
 
-        var test = function (t) {
-            it(t.node + " -> " + t.unlocked, function (done) {
-                this.timeout(TIMEOUT);
-                ethrpc.unlocked(t.account, function (unlocked) {
-                    if (unlocked.error) return done(unlocked);
-                    assert.strictEqual(unlocked, t.unlocked);
-                    done();
+        describe("unlocked", function () {
+
+            var test = function (t) {
+                it(t.node + " -> " + t.unlocked, function (done) {
+                    this.timeout(TIMEOUT);
+                    ethrpc.unlocked(t.account, function (unlocked) {
+                        if (unlocked.error) return done(unlocked);
+                        assert.strictEqual(unlocked, t.unlocked);
+                        done();
+                    });
                 });
-            });
-        };
+            };
 
-        test({
-            account: coinbase,
-            unlocked: true
+            test({
+                account: coinbase,
+                unlocked: true
+            });
+
         });
 
-    });
+    }
 
     describe("Ethereum bindings", function () {
 
-        it("raw('eth_coinbase')", function (done) {
-            ethrpc.raw("eth_coinbase", null, function (res) {
-                if (res.error) return done(res);
-                assert.strictEqual(res, coinbase);
-                done();
-            });
-        });
+        if (!process.env.CONTINUOUS_INTEGRATION) {
 
-        it("eth('coinbase')", function (done) {
-            ethrpc.eth("coinbase", null, function (res) {
-                if (res.error) return done(res);
-                assert.strictEqual(res, coinbase);
-                done();
+            it("raw('eth_coinbase')", function (done) {
+                ethrpc.raw("eth_coinbase", null, function (res) {
+                    if (res.error) return done(res);
+                    assert.strictEqual(res, coinbase);
+                    done();
+                });
             });
-        });
+
+            it("eth('coinbase')", function (done) {
+                ethrpc.eth("coinbase", null, function (res) {
+                    if (res.error) return done(res);
+                    assert.strictEqual(res, coinbase);
+                    done();
+                });
+            });
+
+        }
 
         it("eth('protocolVersion')", function (done) {
             ethrpc.eth("protocolVersion", null, function (res) {
@@ -282,36 +308,40 @@ function runtests(options) {
             });
         });
 
-        it("leveldb('putString')", function (done) {
-            ethrpc.leveldb("putString", [
-                "augur_test_DB",
-                "testkey",
-                "test!"
-            ], function (res) {
-                if (res.error) return done(res);
-                assert.isTrue(res);
-                done();
-            });
-        });
+        if (!process.env.CONTINUOUS_INTEGRATION) {
 
-        it("leveldb('getString')", function (done) {
-            ethrpc.leveldb("putString", [
-                "augur_test_DB",
-                "testkey",
-                "test!"
-            ], function (res) {
-                if (res.error) return done(res);
-                ethrpc.leveldb(
-                    "getString",
-                    ["augur_test_DB", "testkey"],
-                    function (res) {
-                        if (res.error) return done(res);
-                        assert.strictEqual(res, "test!");
-                        done();
-                    }
-                );
+            it("leveldb('putString')", function (done) {
+                ethrpc.leveldb("putString", [
+                    "augur_test_DB",
+                    "testkey",
+                    "test!"
+                ], function (res) {
+                    if (res.error) return done(res);
+                    assert.isTrue(res);
+                    done();
+                });
             });
-        });
+
+            it("leveldb('getString')", function (done) {
+                ethrpc.leveldb("putString", [
+                    "augur_test_DB",
+                    "testkey",
+                    "test!"
+                ], function (res) {
+                    if (res.error) return done(res);
+                    ethrpc.leveldb(
+                        "getString",
+                        ["augur_test_DB", "testkey"],
+                        function (res) {
+                            if (res.error) return done(res);
+                            assert.strictEqual(res, "test!");
+                            done();
+                        }
+                    );
+                });
+            });
+
+        }
 
         it("gasPrice", function (done) {
             ethrpc.gasPrice(function (res) {
@@ -329,50 +359,54 @@ function runtests(options) {
             });
         });
 
-        it("balance/getBalance", function (done) {
-            ethrpc.balance(coinbase, function (res) {
-                if (res.error) return done(res);
-                assert.isAbove(parseInt(res), 0);
-                ethrpc.getBalance(coinbase, function (r) {
-                    if (r.error) return done(r);
-                    assert.isAbove(parseInt(r), 0);
-                    assert.strictEqual(r, res);
-                    ethrpc.balance(coinbase, "latest", function (r) {
+        if (!process.env.CONTINUOUS_INTEGRATION) {
+
+            it("balance/getBalance", function (done) {
+                ethrpc.balance(coinbase, function (res) {
+                    if (res.error) return done(res);
+                    assert.isAbove(parseInt(res), 0);
+                    ethrpc.getBalance(coinbase, function (r) {
                         if (r.error) return done(r);
                         assert.isAbove(parseInt(r), 0);
                         assert.strictEqual(r, res);
-                        ethrpc.getBalance(coinbase, "latest", function (r) {
+                        ethrpc.balance(coinbase, "latest", function (r) {
                             if (r.error) return done(r);
                             assert.isAbove(parseInt(r), 0);
                             assert.strictEqual(r, res);
-                            ethrpc.balance(coinbase, null, function (r) {
+                            ethrpc.getBalance(coinbase, "latest", function (r) {
                                 if (r.error) return done(r);
                                 assert.isAbove(parseInt(r), 0);
                                 assert.strictEqual(r, res);
-                                ethrpc.getBalance(coinbase, null, function (r) {
+                                ethrpc.balance(coinbase, null, function (r) {
                                     if (r.error) return done(r);
                                     assert.isAbove(parseInt(r), 0);
                                     assert.strictEqual(r, res);
-                                    done();
+                                    ethrpc.getBalance(coinbase, null, function (r) {
+                                        if (r.error) return done(r);
+                                        assert.isAbove(parseInt(r), 0);
+                                        assert.strictEqual(r, res);
+                                        done();
+                                    });
                                 });
                             });
                         });
                     });
                 });
             });
-        });
 
-        it("txCount/getTransactionCount", function (done) {
-            ethrpc.txCount(coinbase, function (res) {
-                if (res.error) return done(res);
-                assert(parseInt(res) >= 0);
-                ethrpc.pendingTxCount(coinbase, function (res) {
+            it("txCount/getTransactionCount", function (done) {
+                ethrpc.txCount(coinbase, function (res) {
                     if (res.error) return done(res);
                     assert(parseInt(res) >= 0);
-                    done();
+                    ethrpc.pendingTxCount(coinbase, function (res) {
+                        if (res.error) return done(res);
+                        assert(parseInt(res) >= 0);
+                        done();
+                    });
                 });
             });
-        });
+
+        }
 
         it("peerCount", function (done) {
             ethrpc.peerCount(function (res) {
