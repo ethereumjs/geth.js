@@ -10,6 +10,7 @@ var join = require("path").join;
 var assert = require("chai").assert;
 var ethrpc = require("ethrpc");
 var geth = require("../");
+geth.debug = true;
 
 var COINBASE = {
     "10101": "0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b",
