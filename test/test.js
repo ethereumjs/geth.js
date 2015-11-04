@@ -88,7 +88,6 @@ var options = {
         rpcport: 8547
     },
     "network 7: locked/flags": {
-        account: COINBASE["7"],
         flags: {
             networkid: "7",
             port: 30304,
@@ -206,7 +205,7 @@ function runtests(options) {
 
     before(function (done) {
         this.timeout(TIMEOUT);
-        ethrpc.reset(true);
+        // ethrpc.reset(true);
         geth.configure(options);
         geth.start(function (err, spawned) {
             if (err) return done(err);
