@@ -27,8 +27,11 @@ module.exports = {
 
     configured: false,
 
+    persist: false,
+
     configure: function (options) {
         this.bin = options.geth_bin || "geth";
+        this.persist = options.persist || false;
         var f = options.flags || options;
         this.network = f.networkid;
         f.datadir = f.datadir || join(process.env.HOME, ".ethereum-" + f.networkid);
@@ -39,6 +42,9 @@ module.exports = {
         }
         this.datadir = f.datadir;
         this.flags = [];
+        var rpc = false;
+        var rpcport = false;
+        var rpcapi = false;
         var unlock = false;
         var password = false;
         if (options.account) {
@@ -61,10 +67,14 @@ module.exports = {
                         this.flags.push(f[flag]);
                     }
                 }
+                if (flag === "rpc") rpc = true;
+                if (flag === "rpcport") rpcport = true;
+                if (flag === "rpcapi") rpcapi = true;
                 if (flag === "unlock") unlock = true;
                 if (flag === "password") password = true;
             }
         }
+        if ((rpcport || rpcapi) && !rpc) this.flags.push("--rpc");
         if (unlock && !password) {
             this.flags = this.flags.concat([
                 "--password", join(this.datadir, ".password")
@@ -82,10 +92,10 @@ module.exports = {
                 flags = this.flags;
             }
             callback = callback || function () { };
-            if (this.debug) {
-                console.log(
-                    "Spawn " + this.bin + " on network " + this.network + "..."
-                );
+            if (!this.persist) {
+                process.on("exit", function () {
+                    if (self.proc !== null) self.stop();
+                });
             }
             this.proc = cp.spawn(this.bin, flags);
             this.proc.stdout.on("data", function (data) {

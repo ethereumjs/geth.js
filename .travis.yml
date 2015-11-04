@@ -17,6 +17,9 @@ before_install:
   - yes | geth --datadir ~/.ethereum-10101 &
   - sleep 5
   - killall geth
+  - yes | geth --datadir ~/.ethereum-7 &
+  - sleep 5
+  - killall geth
 
 install:
   - npm install

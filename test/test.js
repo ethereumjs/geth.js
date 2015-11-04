@@ -10,8 +10,9 @@ var join = require("path").join;
 var assert = require("chai").assert;
 var ethrpc = require("ethrpc");
 var geth = require("../");
-geth.debug = false;
+// geth.debug = true;
 
+var SYMLINK = join(process.env.HOME, "ethlink");
 var COINBASE = {
     "10101": "0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b",
     "7": "0x639b41c4d3d399894f2a57894278e1653e7cd24c"
@@ -55,6 +56,69 @@ var options = {
             port: 30304,
             rpcport: 8547
         }
+    },
+    "network 10101: locked/symlink/flags": {
+        symlink: SYMLINK,
+        flags: {
+            networkid: "10101",
+            port: 30304,
+            rpcport: 8547
+        }
+    },
+    "network 10101: locked/persistent/flags": {
+        persist: true,
+        flags: {
+            networkid: "10101",
+            port: 30304,
+            rpcport: 8547
+        }
+    },
+    "network 10101: locked/persistent/symlink/flags": {
+        persist: true,
+        symlink: SYMLINK,
+        flags: {
+            networkid: "10101",
+            port: 30304,
+            rpcport: 8547
+        }
+    },
+    "network 7: locked": {
+        networkid: "7",
+        port: 30304,
+        rpcport: 8547
+    },
+    "network 7: locked/flags": {
+        account: COINBASE["7"],
+        flags: {
+            networkid: "7",
+            port: 30304,
+            rpcport: 8547
+        }
+    },
+    "network 7: locked/symlink/flags": {
+        symlink: SYMLINK,
+        flags: {
+            networkid: "7",
+            port: 30304,
+            rpcport: 8547
+        }
+    },
+    "network 7: locked/persistent/flags": {
+        persist: true,
+        flags: {
+            networkid: "7",
+            port: 30304,
+            rpcport: 8547
+        }
+    },
+    "network 7: locked/persistent/symlink/flags": {
+        persist: true,
+        symlink: SYMLINK,
+        flags: {
+            networkid: "7",
+            port: 30304,
+            rpcport: 8547
+        }
     }
 };
 if (!process.env.CONTINUOUS_INTEGRATION) {
@@ -90,7 +154,7 @@ if (!process.env.CONTINUOUS_INTEGRATION) {
     };
     options["network 10101: account/symlink/flags"] = {
         account: COINBASE["10101"],
-        symlink: join(process.env.HOME, "ethlink"),
+        symlink: SYMLINK,
         flags: {
             networkid: "10101",
             port: 30304,
@@ -119,7 +183,7 @@ if (!process.env.CONTINUOUS_INTEGRATION) {
     };
     options["network 7: account/symlink/flags"] = {
         account: COINBASE["7"],
-        symlink: join(process.env.HOME, "ethlink"),
+        symlink: SYMLINK,
         flags: {
             networkid: "7",
             port: 30304,
@@ -142,6 +206,7 @@ function runtests(options) {
 
     before(function (done) {
         this.timeout(TIMEOUT);
+        ethrpc.reset(true);
         geth.configure(options);
         geth.start(function (err, spawned) {
             if (err) return done(err);
@@ -169,17 +234,6 @@ function runtests(options) {
             });
         };
 
-        if (!process.env.CONTINUOUS_INTEGRATION) {
-            test({
-                command: {
-                    id: ++requests,
-                    jsonrpc: "2.0",
-                    method: "eth_coinbase",
-                    params: []
-                },
-                expected: coinbase
-            });
-        }
         test({
             command: {
                 id: ++requests,
@@ -243,51 +297,7 @@ function runtests(options) {
 
     });
 
-    if (!process.env.CONTINUOUS_INTEGRATION) {
-
-        describe("unlocked", function () {
-
-            var test = function (t) {
-                it(t.node + " -> " + t.unlocked, function (done) {
-                    this.timeout(TIMEOUT);
-                    ethrpc.unlocked(t.account, function (unlocked) {
-                        if (unlocked.error) return done(unlocked);
-                        assert.strictEqual(unlocked, t.unlocked);
-                        done();
-                    });
-                });
-            };
-
-            test({
-                account: coinbase,
-                unlocked: true
-            });
-
-        });
-
-    }
-
     describe("Ethereum bindings", function () {
-
-        if (!process.env.CONTINUOUS_INTEGRATION) {
-
-            it("raw('eth_coinbase')", function (done) {
-                ethrpc.raw("eth_coinbase", null, function (res) {
-                    if (res.error) return done(res);
-                    assert.strictEqual(res, coinbase);
-                    done();
-                });
-            });
-
-            it("eth('coinbase')", function (done) {
-                ethrpc.eth("coinbase", null, function (res) {
-                    if (res.error) return done(res);
-                    assert.strictEqual(res, coinbase);
-                    done();
-                });
-            });
-
-        }
 
         it("eth('protocolVersion')", function (done) {
             ethrpc.eth("protocolVersion", null, function (res) {
