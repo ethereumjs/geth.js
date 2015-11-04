@@ -9,14 +9,7 @@ var fs = require("fs");
 var join = require("path").join;
 var cp = require("child_process");
 
-function GethError(message) {
-    this.name = "GethError";
-    this.message = message;
-}
-
-GethError.prototype = new Error();
-
-var geth = {
+module.exports = {
 
     debug: false,
 
@@ -33,8 +26,6 @@ var geth = {
     bin: null,
 
     configured: false,
-
-    Error: GethError,
 
     configure: function (options) {
         this.bin = options.geth_bin || "geth";
@@ -109,7 +100,7 @@ var geth = {
             this.proc.on("close", function (code) {
                 if (code !== 2 && code !== 0) {
                     if (self.proc !== null) self.stop();
-                    callback(new self.Error("geth closed with code " + code));
+                    callback(new Error("geth closed with code " + code));
                 }
             });
             return this.proc;
@@ -125,7 +116,3 @@ var geth = {
     }
 
 };
-
-process.on("exit", function () { if (geth.proc) geth.stop(); });
-
-module.exports = geth;

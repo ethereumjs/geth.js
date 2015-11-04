@@ -10,7 +10,7 @@ var join = require("path").join;
 var assert = require("chai").assert;
 var ethrpc = require("ethrpc");
 var geth = require("../");
-geth.debug = true;
+geth.debug = false;
 
 var COINBASE = {
     "10101": "0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b",
@@ -145,7 +145,7 @@ function runtests(options) {
         geth.configure(options);
         geth.start(function (err, spawned) {
             if (err) return done(err);
-            if (!spawned) return done(new geth.Error("where's the geth?"));
+            if (!spawned) return done(new Error("where's the geth?"));
             ethrpc.ipcpath = join(geth.datadir, "geth.ipc");
             done();
         });
