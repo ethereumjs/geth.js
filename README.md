@@ -1,11 +1,11 @@
 geth.js
 =======
 
-[![Build Status](https://travis-ci.org/tinybike/geth.js.svg)](https://travis-ci.org/tinybike/geth.js)
-[![Coverage Status](https://coveralls.io/repos/tinybike/geth.js/badge.svg?branch=master&service=github)](https://coveralls.io/github/tinybike/geth.js?branch=master)
+[![Build Status](https://travis-ci.org/AugurProject/geth.js.svg)](https://travis-ci.org/AugurProject/geth.js)
+[![Coverage Status](https://coveralls.io/repos/AugurProject/geth.js/badge.svg?branch=master&service=github)](https://coveralls.io/github/AugurProject/geth.js?branch=master)
 [![npm version](https://badge.fury.io/js/geth.svg)](https://badge.fury.io/js/geth)
 
-A simple tool to start/stop [geth](https://github.com/ethereum/go-ethereum) from Node.js.
+Start and stop [geth](https://github.com/ethereum/go-ethereum) from Node.js.
 
 Usage
 -----
@@ -20,7 +20,7 @@ var geth = require("geth");
 
 ### Starting and stopping geth
 
-geth accepts a configuration object, which uses the same flags as the geth command line client.  (Since this is JavaScript, the flags are organized into an object.)  Flags that are not accompanied by a value on the command line (for example, `--mine`) should be passed in as `{ flag: null }`.
+geth's `start` method accepts a configuration object, which uses the same flags as the geth command line client.  (Here, the flags are organized into an object.)  Flags that are not accompanied by a value on the command line (for example, `--mine`) should be passed in as `{ flag: null }`.
 ```javascript
 var options = {
     networkid: "10101",

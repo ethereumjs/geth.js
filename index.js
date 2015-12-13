@@ -11,11 +11,11 @@ var cp = require("child_process");
 
 function copy(obj) {
     if (null === obj || "object" !== typeof obj) return obj;
-    var copy = obj.constructor();
+    var cc = obj.constructor();
     for (var attr in obj) {
-        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+        if (obj.hasOwnProperty(attr)) cc[attr] = obj[attr];
     }
-    return copy;
+    return cc;
 }
 
 var noop = function () {};
@@ -130,8 +130,8 @@ module.exports = {
             }
             listeners = listeners || {};
             this.trigger = trigger || noop;
+            process._events.removeListener("exit");
             if (!this.persist) {
-                process._events.removeListener("exit");
                 process.on("exit", function () {
                     if (self.proc !== null) self.stop();
                 });
@@ -152,7 +152,6 @@ module.exports = {
             if (!listeners.close) {
                 listeners.close = function (code) {
                     if (code !== 2 && code !== 0) {
-                        self.stop();
                         self.trigger(new Error("geth closed with code " + code));
                     }
                 };
@@ -160,7 +159,7 @@ module.exports = {
             this.proc = cp.spawn(this.bin, flags);
             this.proc.stdout.on("data", listeners.stdout);
             this.proc.stderr.on("data", listeners.stderr);
-            this.proc.on("close", listeners.close);
+            this.proc._events.close = listeners.close;
             return this.proc;
         }
         return this.start(this.configure(flags), listeners, trigger);
@@ -170,10 +169,13 @@ module.exports = {
         var self = this;
         callback = callback || noop;
         if (this.proc) {
-            this.proc._events.close = function (code) {
+            var closed = function (code) {
                 self.configured = false;
+                self.proc._events.close = null;
+                self.proc = null;
                 callback(null, code);
             };
+            this.proc.on("close", closed);
             this.proc.kill("SIGINT");
         } else {
             callback();

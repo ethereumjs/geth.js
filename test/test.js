@@ -1,5 +1,5 @@
 /**
- * ethrpc unit tests
+ * geth.js unit tests
  * @author Jack Peterson (jack@tinybike.net)
  */
 
@@ -199,256 +199,258 @@ var PROTOCOL_VERSION = "63";
 
 function runtests(options) {
 
-    var requests = 0;
-    var network_id = (options.flags) ? options.flags.networkid : options.networkid;
-    var coinbase = COINBASE[network_id];
+    describe("ethrpc commands", function () {
 
-    before(function (done) {
-        this.timeout(TIMEOUT);
-        geth.start(options, function (err, spawned) {
-            if (err) return done(err);
-            if (!spawned) return done(new Error("where's the geth?"));
-            ethrpc.ipcpath = join(geth.datadir, "geth.ipc");
-            done();
-        });
-    });
+        var requests = 0;
+        var network_id = (options.flags) ? options.flags.networkid : options.networkid;
+        var coinbase = COINBASE[network_id];
 
-    after(function (done) {
-        this.timeout(TIMEOUT);
-        geth.stop(done);
-    });
-
-    describe("broadcast", function () {
-
-        var test = function (t) {
-            it(JSON.stringify(t.command) + " -> " + t.expected, function (done) {
-                this.timeout(TIMEOUT);
-                ethrpc.broadcast(t.command, function (res) {
-                    if (res.error) return done(res);
-                    assert.strictEqual(res, t.expected);
-                    done();
-                });
-            });
-        };
-
-        test({
-            command: {
-                id: ++requests,
-                jsonrpc: "2.0",
-                method: "web3_sha3",
-                params: [SHA3_INPUT]
-            },
-            expected: SHA3_DIGEST
-        });
-        test({
-            command: {
-                id: ++requests,
-                jsonrpc: "2.0",
-                method: "net_listening",
-                params: []
-            },
-            expected: true
-        });
-        test({
-            command: {
-                id: ++requests,
-                jsonrpc: "2.0",
-                method: "eth_protocolVersion",
-                params: []
-            },
-            expected: PROTOCOL_VERSION
-        });
-
-    });
-
-    describe("listening", function () {
-
-        var test = function (t) {
-            it(t.node + " -> " + t.listening, function (done) {
-                this.timeout(TIMEOUT);
-                ethrpc.listening(function (listening) {
-                    assert.strictEqual(listening, t.listening);
-                    done();
-                });
-            });
-        };
-
-        test({ listening: true });
-
-    });
-
-    describe("version (network ID)", function () {
-
-        var test = function (t) {
-            it(t.node + " -> " + t.version, function (done) {
-                this.timeout(TIMEOUT);
-                ethrpc.version(function (version) {
-                    if (version.error) return done(version);
-                    assert.strictEqual(version, t.version);
-                    done();
-                });
-            });
-        };
-
-        test({ version: network_id });
-
-    });
-
-    describe("Ethereum bindings", function () {
-
-        it("eth('protocolVersion')", function (done) {
-            ethrpc.eth("protocolVersion", null, function (res) {
-                if (res.error) return done(res);
-                assert.strictEqual(res, PROTOCOL_VERSION);
+        before(function (done) {
+            this.timeout(TIMEOUT);
+            geth.start(options, function (err, spawned) {
+                if (err) return done(err);
+                if (!spawned) return done(new Error("where's the geth?"));
+                ethrpc.ipcpath = join(geth.datadir, "geth.ipc");
                 done();
             });
         });
 
-        it("web3_sha3('" + SHA3_INPUT + "')", function (done) {
-            ethrpc.web3("sha3", SHA3_INPUT, function (res) {
-                if (res.error) return done(res);
-                assert.strictEqual(res, SHA3_DIGEST);
-                ethrpc.sha3(SHA3_INPUT, function (res) {
+        after(function (done) {
+            this.timeout(TIMEOUT);
+            geth.stop(done);
+        });
+
+        describe("broadcast", function () {
+
+            var test = function (t) {
+                it(JSON.stringify(t.command) + " -> " + t.expected, function (done) {
+                    this.timeout(TIMEOUT);
+                    ethrpc.broadcast(t.command, function (res) {
+                        if (res.error) return done(res);
+                        assert.strictEqual(res, t.expected);
+                        done();
+                    });
+                });
+            };
+
+            test({
+                command: {
+                    id: ++requests,
+                    jsonrpc: "2.0",
+                    method: "web3_sha3",
+                    params: [SHA3_INPUT]
+                },
+                expected: SHA3_DIGEST
+            });
+            test({
+                command: {
+                    id: ++requests,
+                    jsonrpc: "2.0",
+                    method: "net_listening",
+                    params: []
+                },
+                expected: true
+            });
+            test({
+                command: {
+                    id: ++requests,
+                    jsonrpc: "2.0",
+                    method: "eth_protocolVersion",
+                    params: []
+                },
+                expected: PROTOCOL_VERSION
+            });
+
+        });
+
+        describe("listening", function () {
+
+            var test = function (t) {
+                it(t.node + " -> " + t.listening, function (done) {
+                    this.timeout(TIMEOUT);
+                    ethrpc.listening(function (listening) {
+                        assert.strictEqual(listening, t.listening);
+                        done();
+                    });
+                });
+            };
+
+            test({ listening: true });
+
+        });
+
+        describe("version (network ID)", function () {
+
+            var test = function (t) {
+                it(t.node + " -> " + t.version, function (done) {
+                    this.timeout(TIMEOUT);
+                    ethrpc.version(function (version) {
+                        if (version.error) return done(version);
+                        assert.strictEqual(version, t.version);
+                        done();
+                    });
+                });
+            };
+
+            test({ version: network_id });
+
+        });
+
+        describe("Ethereum bindings", function () {
+
+            it("eth('protocolVersion')", function (done) {
+                ethrpc.eth("protocolVersion", null, function (res) {
+                    if (res.error) return done(res);
+                    assert.strictEqual(res, PROTOCOL_VERSION);
+                    done();
+                });
+            });
+
+            it("web3_sha3('" + SHA3_INPUT + "')", function (done) {
+                ethrpc.web3("sha3", SHA3_INPUT, function (res) {
                     if (res.error) return done(res);
                     assert.strictEqual(res, SHA3_DIGEST);
-                    done();
-                });
-            });
-        });
-
-        if (!process.env.CONTINUOUS_INTEGRATION) {
-
-            it("leveldb('putString')", function (done) {
-                ethrpc.leveldb("putString", [
-                    "augur_test_DB",
-                    "testkey",
-                    "test!"
-                ], function (res) {
-                    if (res.error) return done(res);
-                    assert.isTrue(res);
-                    done();
+                    ethrpc.sha3(SHA3_INPUT, function (res) {
+                        if (res.error) return done(res);
+                        assert.strictEqual(res, SHA3_DIGEST);
+                        done();
+                    });
                 });
             });
 
-            it("leveldb('getString')", function (done) {
-                ethrpc.leveldb("putString", [
-                    "augur_test_DB",
-                    "testkey",
-                    "test!"
-                ], function (res) {
-                    if (res.error) return done(res);
-                    ethrpc.leveldb(
-                        "getString",
-                        ["augur_test_DB", "testkey"],
-                        function (res) {
-                            if (res.error) return done(res);
-                            assert.strictEqual(res, "test!");
-                            done();
-                        }
-                    );
+            if (!process.env.CONTINUOUS_INTEGRATION) {
+
+                it("leveldb('putString')", function (done) {
+                    ethrpc.leveldb("putString", [
+                        "augur_test_DB",
+                        "testkey",
+                        "test!"
+                    ], function (res) {
+                        if (res.error) return done(res);
+                        assert.isTrue(res);
+                        done();
+                    });
                 });
-            });
 
-        }
+                it("leveldb('getString')", function (done) {
+                    ethrpc.leveldb("putString", [
+                        "augur_test_DB",
+                        "testkey",
+                        "test!"
+                    ], function (res) {
+                        if (res.error) return done(res);
+                        ethrpc.leveldb(
+                            "getString",
+                            ["augur_test_DB", "testkey"],
+                            function (res) {
+                                if (res.error) return done(res);
+                                assert.strictEqual(res, "test!");
+                                done();
+                            }
+                        );
+                    });
+                });
 
-        it("gasPrice", function (done) {
-            ethrpc.gasPrice(function (res) {
-                if (res.error) return done(res);
-                assert.isAbove(parseInt(res), 0);
-                done();
-            });
-        });
+            }
 
-        if (!process.env.CONTINUOUS_INTEGRATION) {
-
-            it("blockNumber", function (done) {
-                ethrpc.blockNumber(function (res) {
+            it("gasPrice", function (done) {
+                ethrpc.gasPrice(function (res) {
                     if (res.error) return done(res);
                     assert.isAbove(parseInt(res), 0);
                     done();
                 });
             });
 
-            it("balance/getBalance", function (done) {
-                ethrpc.balance(coinbase, function (res) {
-                    if (res.error) return done(res);
-                    assert.isAbove(parseInt(res), 0);
-                    ethrpc.getBalance(coinbase, function (r) {
-                        if (r.error) return done(r);
-                        assert.isAbove(parseInt(r), 0);
-                        assert.strictEqual(r, res);
-                        ethrpc.balance(coinbase, "latest", function (r) {
+            if (!process.env.CONTINUOUS_INTEGRATION) {
+
+                it("blockNumber", function (done) {
+                    ethrpc.blockNumber(function (res) {
+                        if (res.error) return done(res);
+                        assert.isAbove(parseInt(res), 0);
+                        done();
+                    });
+                });
+
+                it("balance/getBalance", function (done) {
+                    ethrpc.balance(coinbase, function (res) {
+                        if (res.error) return done(res);
+                        assert.isAbove(parseInt(res), 0);
+                        ethrpc.getBalance(coinbase, function (r) {
                             if (r.error) return done(r);
                             assert.isAbove(parseInt(r), 0);
                             assert.strictEqual(r, res);
-                            ethrpc.getBalance(coinbase, "latest", function (r) {
+                            ethrpc.balance(coinbase, "latest", function (r) {
                                 if (r.error) return done(r);
                                 assert.isAbove(parseInt(r), 0);
                                 assert.strictEqual(r, res);
-                                ethrpc.balance(coinbase, null, function (r) {
+                                ethrpc.getBalance(coinbase, "latest", function (r) {
                                     if (r.error) return done(r);
                                     assert.isAbove(parseInt(r), 0);
                                     assert.strictEqual(r, res);
-                                    ethrpc.getBalance(coinbase, null, function (r) {
+                                    ethrpc.balance(coinbase, null, function (r) {
                                         if (r.error) return done(r);
                                         assert.isAbove(parseInt(r), 0);
                                         assert.strictEqual(r, res);
-                                        done();
+                                        ethrpc.getBalance(coinbase, null, function (r) {
+                                            if (r.error) return done(r);
+                                            assert.isAbove(parseInt(r), 0);
+                                            assert.strictEqual(r, res);
+                                            done();
+                                        });
                                     });
                                 });
                             });
                         });
                     });
                 });
-            });
 
-            it("txCount/getTransactionCount", function (done) {
-                ethrpc.txCount(coinbase, function (res) {
-                    if (res.error) return done(res);
-                    assert(parseInt(res) >= 0);
-                    ethrpc.pendingTxCount(coinbase, function (res) {
+                it("txCount/getTransactionCount", function (done) {
+                    ethrpc.txCount(coinbase, function (res) {
                         if (res.error) return done(res);
                         assert(parseInt(res) >= 0);
-                        done();
+                        ethrpc.pendingTxCount(coinbase, function (res) {
+                            if (res.error) return done(res);
+                            assert(parseInt(res) >= 0);
+                            done();
+                        });
                     });
+                });
+
+            }
+
+            it("peerCount", function (done) {
+                ethrpc.peerCount(function (res) {
+                    if (res.error) return done(res);
+                    assert(parseInt(res) >= 0);
+                    done();
                 });
             });
 
-        }
+            it("hashrate", function (done) {
+                ethrpc.hashrate(function (res) {
+                    if (res.error) return done(res);
+                    assert(parseInt(res) >= 0);
+                    done();
+                });
+            });
 
-        it("peerCount", function (done) {
-            ethrpc.peerCount(function (res) {
-                if (res.error) return done(res);
-                assert(parseInt(res) >= 0);
-                done();
+            it("mining", function (done) {
+                ethrpc.mining(function (res) {
+                    if (res.error) return done(res);
+                    assert.isBoolean(res);
+                    done();
+                });
+            });
+
+            it("clientVersion", function (done) {
+                ethrpc.clientVersion(function (res) {
+                    if (res.error) return done(res);
+                    assert.isString(res);
+                    assert.strictEqual(res.split('/')[0], "Geth");
+                    done();
+                });
             });
         });
-
-        it("hashrate", function (done) {
-            ethrpc.hashrate(function (res) {
-                if (res.error) return done(res);
-                assert(parseInt(res) >= 0);
-                done();
-            });
-        });
-
-        it("mining", function (done) {
-            ethrpc.mining(function (res) {
-                if (res.error) return done(res);
-                assert.isBoolean(res);
-                done();
-            });
-        });
-
-        it("clientVersion", function (done) {
-            ethrpc.clientVersion(function (res) {
-                if (res.error) return done(res);
-                assert.isString(res);
-                assert.strictEqual(res.split('/')[0], "Geth");
-                done();
-            });
-        });
-
     });
 
     describe("listeners", function () {
@@ -472,7 +474,7 @@ function runtests(options) {
                                 if (!spawned) return done(new Error("where's the geth?"));
                                 geth.stdout(t.label, function (data) {
                                     if (data.toString().indexOf("unlocked") > -1) {
-                                        return done();
+                                        geth.stop(done);
                                     }
                                 });
                             });
@@ -505,7 +507,7 @@ function runtests(options) {
                             geth.stderr(t.label, function (data) {
                                 if (geth.debug) process.stdout.write(data);
                                 if (data.toString().indexOf("IPC service started") > -1) {
-                                    return done();
+                                    geth.stop(done);
                                 }
                             });
                         });
