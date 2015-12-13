@@ -130,8 +130,7 @@ module.exports = {
             }
             listeners = listeners || {};
             this.trigger = trigger || noop;
-            process._events.removeListener("exit");
-            if (!this.persist) {
+            if (!this.persist && !process._events.exit) {
                 process.on("exit", function () {
                     if (self.proc !== null) self.stop();
                 });
@@ -171,7 +170,9 @@ module.exports = {
         if (this.proc) {
             var closed = function (code) {
                 self.configured = false;
-                self.proc._events.close = null;
+                if (self.proc !== null) {
+                    self.proc._events.close = null;
+                }
                 self.proc = null;
                 callback(null, code);
             };
