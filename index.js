@@ -9,6 +9,17 @@ var fs = require("fs");
 var join = require("path").join;
 var cp = require("child_process");
 
+function copy(obj) {
+    if (null === obj || "object" !== typeof obj) return obj;
+    var copy = obj.constructor();
+    for (var attr in obj) {
+        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+    }
+    return copy;
+}
+
+var noop = function () {};
+
 module.exports = {
 
     debug: false,
@@ -32,7 +43,7 @@ module.exports = {
     configure: function (options) {
         this.bin = options.geth_bin || "geth";
         this.persist = options.persist || false;
-        var f = options.flags || options;
+        var f = copy(options.flags || options);
         this.network = f.networkid;
         f.datadir = f.datadir || join(process.env.HOME, ".ethereum-" + f.networkid);
         if (options.symlink) {
@@ -84,45 +95,89 @@ module.exports = {
         return this.flags;
     },
 
-    start: function (flags, callback) {
+    listen: function (stream, label, listener) {
+        if (label && label.constructor === Function && !listener) {
+            listener = label;
+            label = null;
+        }
+        label = label || "data";
+        listener = listener || noop;
+        if (this.proc !== null) {
+            this.proc[stream]._events[label] = listener;
+        }
+    },
+
+    stdout: function (label, listener) {
+        this.listen("stdout", label, listener);
+    },
+
+    stderr: function (label, listener) {
+        this.listen("stderr", label, listener);
+    },
+
+    trigger: noop,
+
+    start: function (flags, listeners, trigger) {
         var self = this;
         if (this.configured) {
-            if (flags && flags.constructor === Function) {
-                callback = flags;
+            if (listeners && listeners.constructor === Function && !trigger) {
+                trigger = listeners;
+                listeners = null;
+            }
+            if (flags && flags.constructor === Function && !listeners) {
+                trigger = flags;
                 flags = this.flags;
             }
-            callback = callback || function () { };
+            listeners = listeners || {};
+            this.trigger = trigger || noop;
             if (!this.persist) {
+                process._events.removeListener("exit");
                 process.on("exit", function () {
                     if (self.proc !== null) self.stop();
                 });
             }
+            if (!listeners.stdout) {
+                listeners.stdout = function (data) {
+                    if (self.debug) process.stdout.write(data);
+                };
+            }
+            if (!listeners.stderr) {
+                listeners.stderr = function (data) {
+                    if (self.debug) process.stdout.write(data);
+                    if (data.toString().indexOf("IPC service started") > -1) {
+                        self.trigger(null, self.proc);
+                    }
+                };
+            }
+            if (!listeners.close) {
+                listeners.close = function (code) {
+                    if (code !== 2 && code !== 0) {
+                        self.stop();
+                        self.trigger(new Error("geth closed with code " + code));
+                    }
+                };
+            }
             this.proc = cp.spawn(this.bin, flags);
-            this.proc.stdout.on("data", function (data) {
-                if (self.debug) process.stdout.write(data);
-            });
-            this.proc.stderr.on("data", function (data) {
-                if (self.debug) process.stdout.write(data);
-                if (data.toString().indexOf("IPC service started") > -1) {
-                    callback(null, self.proc);
-                }
-            });
-            this.proc.on("close", function (code) {
-                if (code !== 2 && code !== 0) {
-                    if (self.proc !== null) self.stop();
-                    callback(new Error("geth closed with code " + code));
-                }
-            });
+            this.proc.stdout.on("data", listeners.stdout);
+            this.proc.stderr.on("data", listeners.stderr);
+            this.proc.on("close", listeners.close);
             return this.proc;
         }
-        return this.start(this.configure(flags), callback);
+        return this.start(this.configure(flags), listeners, trigger);
     },
 
-
     stop: function (callback) {
-        callback = callback || function () { };
-        if (this.proc) this.proc.kill();
-        callback();
+        var self = this;
+        callback = callback || noop;
+        if (this.proc) {
+            this.proc._events.close = function (code) {
+                self.configured = false;
+                callback(null, code);
+            };
+            this.proc.kill("SIGINT");
+        } else {
+            callback();
+        }
     }
 
 };

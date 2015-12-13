@@ -1,6 +1,6 @@
 {
   "name": "geth",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Start and stop geth from Node.js",
   "main": "index.js",
   "scripts": {

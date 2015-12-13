@@ -121,13 +121,13 @@ var options = {
     }
 };
 if (!process.env.CONTINUOUS_INTEGRATION) {
-    options["network 7: unlocked"] = {
+    options["network 7: locked"] = {
         networkid: "7",
         port: 30304,
         rpcport: 8547,
         bootnodes: BOOTNODES
     };
-    options["network 7: unlocked/flags"] = {
+    options["network 7: locked/flags"] = {
         flags: {
             networkid: "7",
             port: 30304,
@@ -205,9 +205,7 @@ function runtests(options) {
 
     before(function (done) {
         this.timeout(TIMEOUT);
-        // ethrpc.reset(true);
-        geth.configure(options);
-        geth.start(function (err, spawned) {
+        geth.start(options, function (err, spawned) {
             if (err) return done(err);
             if (!spawned) return done(new Error("where's the geth?"));
             ethrpc.ipcpath = join(geth.datadir, "geth.ipc");
@@ -453,6 +451,72 @@ function runtests(options) {
 
     });
 
+    describe("listeners", function () {
+
+        describe("stdout", function () {
+
+            var test = function (t) {
+                if (options.account || (options.flags && options.flags.unlock)) {
+                    it("geth.stdout(" + t.label + ")", function (done) {
+                        this.timeout(TIMEOUT);
+                        geth.stop(function () {
+                            geth.start(options, {
+                                stderr: function (data) {
+                                    if (geth.debug) process.stdout.write(data);
+                                    if (data.toString().indexOf("16MB") > -1) {
+                                        geth.trigger(null, geth.proc);
+                                    }
+                                }
+                            }, function (err, spawned) {
+                                if (err) return done(err);
+                                if (!spawned) return done(new Error("where's the geth?"));
+                                geth.stdout(t.label, function (data) {
+                                    if (data.toString().indexOf("unlocked") > -1) {
+                                        return done();
+                                    }
+                                });
+                            });
+                        });
+                    });
+                }
+            };
+
+            test({ label: "data" });
+            test({ label: undefined });
+        });
+
+        describe("stderr", function () {
+
+            var test = function (t) {
+                var label = (t.label) ? "'" + t.label + "'" : "";
+                it("geth.stderr(" + label + ")", function (done) {
+                    this.timeout(TIMEOUT);
+                    geth.stop(function () {
+                        geth.start(options, {
+                            stderr: function (data) {
+                                if (geth.debug) process.stdout.write(data);
+                                if (data.toString().indexOf("Protocol") > -1) {
+                                    geth.trigger(null, geth.proc);
+                                }
+                            }
+                        }, function (err, spawned) {
+                            if (err) return done(err);
+                            if (!spawned) return done(new Error("where's the geth?"));
+                            geth.stderr(t.label, function (data) {
+                                if (geth.debug) process.stdout.write(data);
+                                if (data.toString().indexOf("IPC service started") > -1) {
+                                    return done();
+                                }
+                            });
+                        });
+                    });
+                });
+            };
+
+            test({ label: "data" });
+            test({ label: undefined });
+        });
+    });
 }
 
 async.forEachOfSeries(options, function (opt, label, nextOpt) {
