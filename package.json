@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AugurProject/geth.js.git"
+    "url": "git+https://github.com/ethereumjs/geth.js.git"
   },
   "keywords": [
     "geth",
@@ -20,9 +20,9 @@
   "author": "Jack Peterson <jack@tinybike.net>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/AugurProject/geth.js/issues"
+    "url": "https://github.com/ethereumjs/geth.js/issues"
   },
-  "homepage": "https://github.com/AugurProject/geth.js#readme",
+  "homepage": "https://github.com/ethereumjs/geth.js#readme",
   "devDependencies": {
     "async": "^1.5.0",
     "chai": "^3.4.0",

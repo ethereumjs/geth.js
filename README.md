@@ -1,8 +1,8 @@
 geth.js
 =======
 
-[![Build Status](https://travis-ci.org/AugurProject/geth.js.svg)](https://travis-ci.org/AugurProject/geth.js)
-[![Coverage Status](https://coveralls.io/repos/AugurProject/geth.js/badge.svg?branch=master&service=github)](https://coveralls.io/github/AugurProject/geth.js?branch=master)
+[![Build Status](https://travis-ci.org/ethereumjs/geth.js.svg)](https://travis-ci.org/ethereumjs/geth.js)
+[![Coverage Status](https://coveralls.io/repos/ethereumjs/geth.js/badge.svg?branch=master&service=github)](https://coveralls.io/github/ethereumjs/geth.js?branch=master)
 [![npm version](https://badge.fury.io/js/geth.svg)](https://badge.fury.io/js/geth)
 
 Start and stop [geth](https://github.com/ethereum/go-ethereum) from Node.js.
