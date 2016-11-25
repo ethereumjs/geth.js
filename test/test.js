@@ -16,7 +16,7 @@ var SYMLINK = join(process.env.HOME, "ethlink");
 var COINBASE = {
     "10101": "0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b",
     "7": "0x639b41c4d3d399894f2a57894278e1653e7cd24c"
-}
+};
 var BOOTNODES = [
     "enode://"+
         "d4f4e7fd3954718562544dbf322c0c84d2c87f154dd66a39ea0787a6f74930c4"+
