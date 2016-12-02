@@ -56,6 +56,9 @@ module.exports = {
         var rpc = false;
         var rpcport = false;
         var rpcapi = false;
+        var ws = false;
+        var wsport = false;
+        var wsapi = false;
         var unlock = false;
         var password = false;
         if (options.account) {
@@ -81,11 +84,15 @@ module.exports = {
                 if (flag === "rpc") rpc = true;
                 if (flag === "rpcport") rpcport = true;
                 if (flag === "rpcapi") rpcapi = true;
+                if (flag === "ws") ws = true;
+                if (flag === "wsport") wsport = true;
+                if (flag === "wsapi") wsapi = true;
                 if (flag === "unlock") unlock = true;
                 if (flag === "password") password = true;
             }
         }
         if ((rpcport || rpcapi) && !rpc) this.flags.push("--rpc");
+        if ((wsport || wsapi) && !ws) this.flags.push("--ws");
         if (unlock && !password) {
             this.flags = this.flags.concat([
                 "--password", join(this.datadir, ".password")
@@ -143,7 +150,7 @@ module.exports = {
             if (!listeners.stderr) {
                 listeners.stderr = function (data) {
                     if (self.debug) process.stdout.write(data);
-                    if (data.toString().indexOf("IPC service started") > -1) {
+                    if (data.toString().indexOf("HTTP endpoint opened") > -1) {
                         self.trigger(null, self.proc);
                     }
                 };

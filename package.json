@@ -1,6 +1,6 @@
 {
   "name": "geth",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Start and stop geth from Node.js",
   "main": "index.js",
   "scripts": {
@@ -27,7 +27,7 @@
     "async": "^1.5.0",
     "chai": "^3.4.0",
     "coveralls": "^2.11.4",
-    "ethrpc": "^0.3.8",
+    "ethrpc": "^2.2.4",
     "istanbul": "^0.4.0",
     "mocha": "^2.3.3"
   }

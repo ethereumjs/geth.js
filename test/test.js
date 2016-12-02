@@ -10,7 +10,7 @@ var join = require("path").join;
 var assert = require("chai").assert;
 var ethrpc = require("ethrpc");
 var geth = require("../");
-// geth.debug = true;
+geth.debug = false;
 
 var SYMLINK = join(process.env.HOME, "ethlink");
 var COINBASE = {
@@ -185,9 +185,7 @@ if (!process.env.CONTINUOUS_INTEGRATION) {
 }
 
 var TIMEOUT = 360000;
-var SHA3_INPUT = "boom!";
-var SHA3_DIGEST = "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
-var PROTOCOL_VERSION = "63";
+var PROTOCOL_VERSION = "0x3f";
 
 function runtests(options) {
 
@@ -225,15 +223,6 @@ function runtests(options) {
                 });
             };
 
-            test({
-                command: {
-                    id: ++requests,
-                    jsonrpc: "2.0",
-                    method: "web3_sha3",
-                    params: [SHA3_INPUT]
-                },
-                expected: SHA3_DIGEST
-            });
             test({
                 command: {
                     id: ++requests,
@@ -298,55 +287,8 @@ function runtests(options) {
                 });
             });
 
-            it("web3_sha3('" + SHA3_INPUT + "')", function (done) {
-                ethrpc.web3("sha3", SHA3_INPUT, function (res) {
-                    if (res.error) return done(res);
-                    assert.strictEqual(res, SHA3_DIGEST);
-                    ethrpc.sha3(SHA3_INPUT, function (res) {
-                        if (res.error) return done(res);
-                        assert.strictEqual(res, SHA3_DIGEST);
-                        done();
-                    });
-                });
-            });
-
-            if (!process.env.CONTINUOUS_INTEGRATION) {
-
-                it("leveldb('putString')", function (done) {
-                    ethrpc.leveldb("putString", [
-                        "augur_test_DB",
-                        "testkey",
-                        "test!"
-                    ], function (res) {
-                        if (res.error) return done(res);
-                        assert.isTrue(res);
-                        done();
-                    });
-                });
-
-                it("leveldb('getString')", function (done) {
-                    ethrpc.leveldb("putString", [
-                        "augur_test_DB",
-                        "testkey",
-                        "test!"
-                    ], function (res) {
-                        if (res.error) return done(res);
-                        ethrpc.leveldb(
-                            "getString",
-                            ["augur_test_DB", "testkey"],
-                            function (res) {
-                                if (res.error) return done(res);
-                                assert.strictEqual(res, "test!");
-                                done();
-                            }
-                        );
-                    });
-                });
-
-            }
-
-            it("gasPrice", function (done) {
-                ethrpc.gasPrice(function (res) {
+            it("getGasPrice", function (done) {
+                ethrpc.getGasPrice(function (res) {
                     if (res.error) return done(res);
                     assert.isAbove(parseInt(res), 0);
                     done();
@@ -457,7 +399,7 @@ function runtests(options) {
                             geth.start(options, {
                                 stderr: function (data) {
                                     if (geth.debug) process.stdout.write(data);
-                                    if (data.toString().indexOf("16MB") > -1) {
+                                    if (data.toString().indexOf("cache") > -1) {
                                         geth.trigger(null, geth.proc);
                                     }
                                 }
@@ -465,9 +407,7 @@ function runtests(options) {
                                 if (err) return done(err);
                                 if (!spawned) return done(new Error("where's the geth?"));
                                 geth.stdout(t.label, function (data) {
-                                    if (data.toString().indexOf("unlocked") > -1) {
-                                        geth.stop(done);
-                                    }
+                                    geth.stop(done);
                                 });
                             });
                         });
@@ -498,7 +438,7 @@ function runtests(options) {
                             if (!spawned) return done(new Error("where's the geth?"));
                             geth.stderr(t.label, function (data) {
                                 if (geth.debug) process.stdout.write(data);
-                                if (data.toString().indexOf("IPC service started") > -1) {
+                                if (data.toString().indexOf("HTTP endpoint opened") > -1) {
                                     geth.stop(done);
                                 }
                             });
