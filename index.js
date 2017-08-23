@@ -52,6 +52,7 @@ module.exports = {
             f.datadir = options.symlink;
         }
         this.datadir = f.datadir;
+        this.syncmode = f.syncmode;
         this.flags = [];
         var rpc = false;
         var rpcport = false;
