@@ -22,6 +22,8 @@ var noop = function () {};
 
 module.exports = {
 
+    version: "0.4.0",
+
     debug: false,
 
     proc: null,
@@ -175,7 +177,7 @@ module.exports = {
     stop: function (callback) {
         var self = this;
         callback = callback || noop;
-        if (this.proc) {
+        if (this.proc !== null) {
             var closed = function (code) {
                 self.configured = false;
                 if (self.proc !== null) {

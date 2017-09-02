@@ -1,8 +1,3 @@
-/**
- * geth.js unit tests
- * @author Jack Peterson (jack@tinybike.net)
- */
-
 "use strict";
 
 var async = require("async");
@@ -15,7 +10,7 @@ geth.debug = false;
 var SYMLINK = join(process.env.HOME, "ethlink");
 var COINBASE = {
     "10101": "0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b",
-    "7": "0x639b41c4d3d399894f2a57894278e1653e7cd24c"
+    "7": "0x05ae1d0ca6206c6168b42efcd1fbe0ed144e821b"
 };
 var BOOTNODES = [
     "enode://"+
@@ -198,8 +193,8 @@ function runtests(options) {
         before(function (done) {
             this.timeout(TIMEOUT);
             geth.start(options, function (err, spawned) {
-                if (err) return done(err);
-                if (!spawned) return done(new Error("where's the geth?"));
+                if (err) return geth.stop(function () { done(err); });
+                if (!spawned) return geth.stop(function () { done(new Error("where's the geth?")); });
                 ethrpc.ipcpath = join(geth.datadir, "geth.ipc");
                 done();
             });
@@ -300,7 +295,7 @@ function runtests(options) {
                 it("blockNumber", function (done) {
                     ethrpc.blockNumber(function (res) {
                         if (res.error) return done(res);
-                        assert.isAbove(parseInt(res), 0);
+                        assert.isAtLeast(parseInt(res), 0);
                         done();
                     });
                 });
@@ -308,26 +303,26 @@ function runtests(options) {
                 it("balance/getBalance", function (done) {
                     ethrpc.balance(coinbase, function (res) {
                         if (res.error) return done(res);
-                        assert.isAbove(parseInt(res), 0);
+                        assert.isAtLeast(parseInt(res), 0);
                         ethrpc.getBalance(coinbase, function (r) {
                             if (r.error) return done(r);
-                            assert.isAbove(parseInt(r), 0);
+                            assert.isAtLeast(parseInt(r), 0);
                             assert.strictEqual(r, res);
                             ethrpc.balance(coinbase, "latest", function (r) {
                                 if (r.error) return done(r);
-                                assert.isAbove(parseInt(r), 0);
+                                assert.isAtLeast(parseInt(r), 0);
                                 assert.strictEqual(r, res);
                                 ethrpc.getBalance(coinbase, "latest", function (r) {
                                     if (r.error) return done(r);
-                                    assert.isAbove(parseInt(r), 0);
+                                    assert.isAtLeast(parseInt(r), 0);
                                     assert.strictEqual(r, res);
                                     ethrpc.balance(coinbase, null, function (r) {
                                         if (r.error) return done(r);
-                                        assert.isAbove(parseInt(r), 0);
+                                        assert.isAtLeast(parseInt(r), 0);
                                         assert.strictEqual(r, res);
                                         ethrpc.getBalance(coinbase, null, function (r) {
                                             if (r.error) return done(r);
-                                            assert.isAbove(parseInt(r), 0);
+                                            assert.isAtLeast(parseInt(r), 0);
                                             assert.strictEqual(r, res);
                                             done();
                                         });
@@ -389,36 +384,6 @@ function runtests(options) {
 
     describe("listeners", function () {
 
-        describe("stdout", function () {
-
-            var test = function (t) {
-                if (options.account || (options.flags && options.flags.unlock)) {
-                    it("geth.stdout(" + t.label + ")", function (done) {
-                        this.timeout(TIMEOUT);
-                        geth.stop(function () {
-                            geth.start(options, {
-                                stderr: function (data) {
-                                    if (geth.debug) process.stdout.write(data);
-                                    if (data.toString().indexOf("cache") > -1) {
-                                        geth.trigger(null, geth.proc);
-                                    }
-                                }
-                            }, function (err, spawned) {
-                                if (err) return done(err);
-                                if (!spawned) return done(new Error("where's the geth?"));
-                                geth.stdout(t.label, function (data) {
-                                    geth.stop(done);
-                                });
-                            });
-                        });
-                    });
-                }
-            };
-
-            test({ label: "data" });
-            test({ label: undefined });
-        });
-
         describe("stderr", function () {
 
             var test = function (t) {
@@ -429,13 +394,17 @@ function runtests(options) {
                         geth.start(options, {
                             stderr: function (data) {
                                 if (geth.debug) process.stdout.write(data);
-                                if (data.toString().indexOf("Protocol") > -1) {
+                                if (data.toString().indexOf("Starting P2P networking") > -1) {
                                     geth.trigger(null, geth.proc);
                                 }
                             }
                         }, function (err, spawned) {
-                            if (err) return done(err);
-                            if (!spawned) return done(new Error("where's the geth?"));
+                            if (err) {
+                                return geth.stop(function () { done(err); });
+                            }
+                            if (!spawned) {
+                                return geth.stop(function () { done(new Error("where's the geth?")); });
+                            }
                             geth.stderr(t.label, function (data) {
                                 if (geth.debug) process.stdout.write(data);
                                 if (data.toString().indexOf("HTTP endpoint opened") > -1) {
